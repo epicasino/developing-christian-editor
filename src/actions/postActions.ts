@@ -1,5 +1,6 @@
 'use server';
 import db from '@/db/drizzle';
+import { posts } from '@/db/schema';
 
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
@@ -8,6 +9,13 @@ interface iGetSignedURL {
   fileType: string;
   fileSize: number;
   checksum: string;
+}
+
+interface iUploadPost {
+  title: string;
+  subtitle?: string | null;
+  image?: string | null;
+  content: string;
 }
 
 const s3 = new S3Client({
@@ -21,6 +29,27 @@ const s3 = new S3Client({
 import crypto from 'crypto';
 
 const maxFileSize = 1048576 * 100; // 10 MB;
+
+export const uploadPost = async ({
+  title,
+  subtitle,
+  image,
+  content,
+}: iUploadPost) => {
+  // console.log({ title, subtitle, image, content });
+
+  const res = await db
+    .insert(posts)
+    .values({
+      title: title,
+      subtitle: subtitle,
+      image: image,
+      content: content,
+    })
+    .returning();
+  // console.log(res);
+  return res;
+};
 
 export const getSignedURL = async ({
   fileType,
@@ -45,5 +74,6 @@ export const getSignedURL = async ({
   const signedURL = await getSignedUrl(s3, putObjComm, {
     expiresIn: 60,
   });
+
   return { success: { url: signedURL } };
 };
