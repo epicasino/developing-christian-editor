@@ -1,7 +1,9 @@
 'use client';
 import '@mdxeditor/editor/style.css';
 import {
+  BlockTypeSelect,
   BoldItalicUnderlineToggles,
+  CreateLink,
   DiffSourceToggleWrapper,
   ImageUploadHandler,
   InsertImage,
@@ -13,10 +15,11 @@ import {
   imagePlugin,
   linkPlugin,
   listsPlugin,
+  markdownShortcutPlugin,
   quotePlugin,
   toolbarPlugin,
 } from '@mdxeditor/editor';
-import { Dispatch, FC, SetStateAction, useEffect, useState } from 'react';
+import { Dispatch, FC, SetStateAction } from 'react';
 import { getSignedURL } from '@/actions/postActions';
 
 interface EditorProps {
@@ -32,14 +35,19 @@ const Editor: FC<EditorProps> = ({
   setMarkdown,
   computeSHA256,
 }) => {
-  const imageUploadHandler: ImageUploadHandler = async (image: File) => {
+  const imageUploadHandler: ImageUploadHandler = async (
+    image: File | string
+  ) => {
+    if (typeof image == 'string') {
+      return Promise.resolve(image);
+    }
     const res = await getSignedURL({
       fileType: image.type,
       fileSize: image.size,
       checksum: await computeSHA256(image),
     });
     const url = res.success?.url;
-    console.log(url);
+    // console.log(url);
     if (url) {
       await fetch(url, {
         method: 'PUT',
@@ -64,6 +72,7 @@ const Editor: FC<EditorProps> = ({
         listsPlugin(),
         linkPlugin(),
         imagePlugin({ imageUploadHandler }),
+        markdownShortcutPlugin(),
         diffSourcePlugin({
           diffMarkdown: 'An older version',
           viewMode: 'source',
@@ -74,7 +83,9 @@ const Editor: FC<EditorProps> = ({
               <DiffSourceToggleWrapper>
                 <UndoRedo />
               </DiffSourceToggleWrapper>
+              <BlockTypeSelect />
               <BoldItalicUnderlineToggles />
+              <CreateLink />
               <InsertImage />
             </>
           ),

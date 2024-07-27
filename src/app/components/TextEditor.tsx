@@ -20,6 +20,7 @@ export default function TextEditor() {
   const [file, setFile] = useState<File | null>(null);
   const [fileURL, setFileURL] = useState<string | null>(null);
   const [markdown, setMarkdown] = useState(``);
+  const [postedArticle, setPostedArticle] = useState<string>();
 
   const computeSHA256 = async (file: File) => {
     const buffer = await file.arrayBuffer();
@@ -72,7 +73,7 @@ export default function TextEditor() {
         image: null,
         content: markdown,
       });
-      if (res) return res;
+      if (res) return setPostedArticle(res[0].id);
     }
   };
 
@@ -126,10 +127,16 @@ export default function TextEditor() {
           setMarkdown={setMarkdown}
           computeSHA256={computeSHA256}
         />
-        <button type="submit" className="">
-          Submit
+        <button
+          type="submit"
+          className="bg-blue-500 text-center self-center text-white py-2 px-4 rounded-md transition hover:bg-blue-700"
+        >
+          Post Article
         </button>
       </form>
+      {postedArticle && (
+        <h6 className="self-center">Posted Article! ID: {postedArticle}</h6>
+      )}
     </>
   );
 }
